@@ -31,5 +31,9 @@ Eigen::Matrix4f NDT_matching(const PointCloud::Ptr source,
                              const PointCloud::Ptr target,
                              const Eigen::Matrix4f& initial_guess);
 
+Eigen::Matrix4f ICP_matching(const PointCloud::Ptr source,
+                             const PointCloud::Ptr target,
+                             const Eigen::Matrix4f& initial_guess);
+
 }  // namespace pcl_matching
 #endif  // INCLUDE_PCL_MATCHING_HPP_

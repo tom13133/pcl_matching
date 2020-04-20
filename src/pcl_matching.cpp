@@ -1,5 +1,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/crop_box.h>
+#include <pcl/registration/icp.h>
+#include <pcl/registration/icp_nl.h>
 #include <pcl/registration/ndt.h>
 #include <pcl_matching.hpp>
 
@@ -62,5 +64,68 @@ Eigen::Matrix4f NDT_matching(const PointCloud::Ptr source,
   ndt.align(*cloud_transform, initial_guess);
 
   return ndt.getFinalTransformation();
+}
+
+
+Eigen::Matrix4f ICP_matching(const PointCloud::Ptr source,
+                             const PointCloud::Ptr target,
+                             const Eigen::Matrix4f& initial_guess) {
+  // lidar localization using NDT
+  PointCloud::Ptr cloud_filtered(new PointCloud);
+  PointCloud::Ptr map(new PointCloud);
+  PointCloud::Ptr temp_1(new PointCloud);
+  PointCloud::Ptr temp_2(new PointCloud);
+
+  // NDT source
+  pcl::CropBox<pcl::PointXYZI> box_filter;
+  box_filter.setMin(Eigen::Vector4f(-2, -2, -2, 1.0));
+  box_filter.setMax(Eigen::Vector4f(2, 2, 2, 1.0));
+  box_filter.setInputCloud(source);
+  box_filter.setNegative(true);
+  box_filter.filter(*temp_1);
+
+  box_filter.setMin(Eigen::Vector4f(-40, -40, -40, 1.0));
+  box_filter.setMax(Eigen::Vector4f(40, 40, 40, 1.0));
+  box_filter.setInputCloud(temp_1);
+  box_filter.setNegative(false);
+  box_filter.filter(*temp_2);
+
+  pcl::VoxelGrid<pcl::PointXYZI> sor;
+  sor.setInputCloud(temp_2);
+  sor.setLeafSize(0.3f, 0.3f, 0.3f);
+  sor.filter(*cloud_filtered);
+
+  // NDT target
+  Eigen::Affine3f T(initial_guess);
+  box_filter.setMin(Eigen::Vector4f(T.translation().x()-50,
+                                    T.translation().y()-50,
+                                    T.translation().z()-50,
+                                    1.0));
+  box_filter.setMax(Eigen::Vector4f(T.translation().x()+50,
+                                    T.translation().y()+50,
+                                    T.translation().z()+50,
+                                    1.0));
+  box_filter.setInputCloud(target);
+  box_filter.filter(*temp_1);
+  sor.setInputCloud(temp_1);
+  sor.setLeafSize(0.1f, 0.1f, 0.1f);
+  sor.filter(*map);
+
+  // There are different types of ICP algorithm in pcl
+  pcl::IterativeClosestPoint<pcl::PointXYZI, pcl::PointXYZI> icp;
+//  pcl::IterativeClosestPointNonLinear<pcl::PointXYZI, pcl::PointXYZI> icp;
+
+  icp.setTransformationEpsilon (1e-8);
+  icp.setMaxCorrespondenceDistance (4);
+  icp.setEuclideanFitnessEpsilon (1e-8);
+  icp.setMaximumIterations (500);
+
+  icp.setInputSource(cloud_filtered);
+  icp.setInputTarget(map);
+
+  PointCloud::Ptr cloud_transform(new PointCloud);
+  icp.align(*cloud_transform, initial_guess);
+
+  return icp.getFinalTransformation();
 }
 }  // namespace pcl_matching

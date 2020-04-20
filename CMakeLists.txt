@@ -44,6 +44,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/pcl_matching.cpp
   src/ndt_mapping.cpp
+  src/icp_mapping.cpp
 )
 
 
@@ -52,4 +53,6 @@ add_executable(ndt_mapping_node scripts/ndt_mapping_node.cpp)
 add_dependencies(ndt_mapping_node ${main_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(ndt_mapping_node ${catkin_LIBRARIES} ${PROJECT_NAME} ${PCL_LIBRARIES})
 
-
+add_executable(icp_mapping_node scripts/icp_mapping_node.cpp)
+add_dependencies(icp_mapping_node ${main_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(icp_mapping_node ${catkin_LIBRARIES} ${PROJECT_NAME} ${PCL_LIBRARIES})
