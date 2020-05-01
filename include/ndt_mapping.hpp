@@ -24,12 +24,11 @@
 
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <utility>
-
 #include <tf/transform_broadcaster.h>
 
 #include <pcl_matching.hpp>

@@ -20,9 +20,11 @@
 #ifndef INCLUDE_PCL_MATCHING_HPP_
 #define INCLUDE_PCL_MATCHING_HPP_
 #include <pcl/point_types.h>
+#include <pcl/search/impl/search.hpp>
 #include <pcl_ros/point_cloud.h>
 #include <Eigen/Geometry>
 #include "Eigen/Dense"
+
 
 namespace pcl_matching {
 typedef pcl::PointCloud<pcl::PointXYZI> PointCloud;
