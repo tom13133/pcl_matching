@@ -22,6 +22,9 @@ ndt_mapping::ndt_mapping(ros::NodeHandle* nh) {
   path = ros::package::getPath("pcl_matching");
   p_nh->getParam("/ndt_mapping_node/topic_name_lidar", topic_name_lidar);
   p_nh->getParam("/ndt_mapping_node/map_saved", map_saved);
+  p_nh->getParam("/ndt_mapping_node/map_resolution", map_resolution);
+  p_nh->getParam("/ndt_mapping_node/map_update/displacement", update_disp);
+  p_nh->getParam("/ndt_mapping_node/map_update/time_difference", update_td);
 
   // Subscriber
   lidar_sub = p_nh->subscribe(topic_name_lidar, 100, &ndt_mapping::cb_lidar, this);
@@ -33,7 +36,6 @@ ndt_mapping::ndt_mapping(ros::NodeHandle* nh) {
   first_frame = false;
 
   initial_guess = Eigen::Matrix4f::Identity();
-  last_pose = Eigen::Matrix4f::Identity();
 }
 
 
@@ -58,6 +60,7 @@ void ndt_mapping::cb_lidar(const sensor_msgs::PointCloud2& msg) {
     first_frame = true;
     topic_frame_lidar = msg.header.frame_id;
     local_map = *cloud_clipped;
+    last_pose = std::make_pair(current_time, Eigen::Matrix4f::Identity());
     return;
   }
   local_map.header.frame_id = "map";
@@ -102,7 +105,7 @@ void ndt_mapping::cb_lidar(const sensor_msgs::PointCloud2& msg) {
                << q_ml.y() << ", "
                << q_ml.z() << std::endl;
 
-  Eigen::Affine3f last_T(last_pose);
+  Eigen::Affine3f last_T(last_pose.second);
   Point current_position{T_ml.translation().x(),
                          T_ml.translation().y(),
                          T_ml.translation().z()};
@@ -110,19 +113,20 @@ void ndt_mapping::cb_lidar(const sensor_msgs::PointCloud2& msg) {
                       last_T.translation().y(),
                       last_T.translation().z()};
 
-  if ((current_position - last_position).norm() > 5) {
+  if ((current_position - last_position).norm() > update_disp
+       || (current_time - last_pose.first) > update_td) {
     std::cout << "Map updated" << std::endl;
     PointCloud::Ptr cloud_transform(new PointCloud);
     pcl::transformPointCloud(*cloud_clipped, *cloud_transform, ndt_transformation);
     PointCloud::Ptr local_map_(new PointCloud);
     PointCloud::Ptr local_map_filtered(new PointCloud);
     local_map += *cloud_transform;
-    last_pose = ndt_transformation;
+    last_pose = std::make_pair(current_time, ndt_transformation);
 
     *local_map_ = local_map;
     pcl::VoxelGrid<pcl::PointXYZI> sor;
     sor.setInputCloud(local_map_);
-    sor.setLeafSize(0.2f, 0.2f, 0.2f);
+    sor.setLeafSize(map_resolution, map_resolution, map_resolution);
     sor.filter(*local_map_filtered);
     local_map = *local_map_filtered;
   }

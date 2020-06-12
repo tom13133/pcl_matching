@@ -64,9 +64,11 @@ class ndt_mapping {
 
   bool first_frame;
   bool map_saved;
+  float map_resolution;
+  float update_disp, update_td;
   std::vector<std::pair<double, Eigen::Matrix4f>> last_n_pose;
   Eigen::Matrix4f initial_guess;
-  Eigen::Matrix4f last_pose;
+  std::pair<double, Eigen::Matrix4f> last_pose;
 
   tf::TransformBroadcaster br;
   tf::Transform transform;

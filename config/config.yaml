@@ -1,2 +1,6 @@
 topic_name_lidar: "/points_raw"
 map_saved: true
+map_resolution: 0.02
+map_update:
+  displacement: 5
+  time_difference: 1
