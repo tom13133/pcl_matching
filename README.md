@@ -42,6 +42,14 @@ Their path is
 roslaunch pcl_matching ndt_mapping.launch
 ```
 
+### (c) Subscribed Topics
+* /points_raw (sensor_msgs/PointCloud2)  
+Point cloud for building map.  
+
+### (d) Published Topics
+* /ndt_mapping_node/local_map (sensor_msgs/PointCloud2)  
+Built map. The first LiDAR frame is set as the map frame.  
+
 ## 2. Node icp_mapping_node
 
 ### (a) Setup
@@ -74,6 +82,14 @@ Their path is
 ```
 roslaunch pcl_matching icp_mapping.launch
 ```
+
+### (c) Subscribed Topics
+* /points_raw (sensor_msgs/PointCloud2)  
+Point cloud for building map.  
+
+### (d) Published Topics
+* /icp_mapping_node/local_map (sensor_msgs/PointCloud2)  
+Built map. The first LiDAR frame is set as the map frame.  
 
 * Result of ndt mapping
 <img src="https://github.com/tom13133/pcl_matching/blob/master/images/mapping.png" width="1000">
